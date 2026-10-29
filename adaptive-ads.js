@@ -67,7 +67,7 @@
     if (/advertis|ad content/i.test(frame.title)) return true;
     try {
       const hostname = new URL(frame.src, location.href).hostname;
-      return ['googlesyndication.com', 'doubleclick.net', 'adthrive.com']
+      return ['googlesyndication.com', 'doubleclick.net', 'adthrive.com', 'html-load.com']
         .some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
     } catch {
       return false;

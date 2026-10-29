@@ -518,5 +518,31 @@
         "other"
       ]
     }
+  },
+  {
+    "id": 21,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "requestDomains": [
+        "html-load.com"
+      ],
+      "initiatorDomains": [
+        "riftdecks.com",
+        "mtgdecks.net",
+        "inkdecks.com"
+      ],
+      "resourceTypes": [
+        "sub_frame",
+        "script",
+        "image",
+        "stylesheet",
+        "xmlhttprequest",
+        "font",
+        "media",
+        "other"
+      ]
+    }
   }
 ]

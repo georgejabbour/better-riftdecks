@@ -14,6 +14,18 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (request.url === '/proxy-ad.js') {
+    response.setHeader('Content-Type', 'text/javascript');
+    response.end('window.proxyAdLoaded = true;');
+    return;
+  }
+
+  if (request.url === '/proxy-ad.html') {
+    response.setHeader('Content-Type', 'text/html');
+    response.end('<!doctype html><h1>Recovered footer ad</h1>');
+    return;
+  }
+
   response.setHeader('Content-Type', 'text/html');
   response.end(`<!doctype html><html><head><style>
     .adthrive-ad, .randomAdClass { display: flex; }
@@ -76,6 +88,15 @@ const server = http.createServer((request, response) => {
       document.body.appendChild(ad);
     ">Add late ad</button>
     <button onclick="document.querySelector('.lateCssomAd iframe').title = '3rd party ad content'">Identify ad frame</button>
+    <button onclick="
+      window.delayedStyle.sheet.insertRule('.adthrive-ad, .proxyFooterAd { display: block; min-height: 90px; }');
+      const ad = document.createElement('div');
+      ad.className = 'proxyFooterAd';
+      const frame = document.createElement('iframe');
+      frame.src = 'http://5.html-load.com:${server.address().port}/proxy-ad.html';
+      ad.appendChild(frame);
+      document.body.appendChild(ad);
+    ">Add proxy footer</button>
     <a href="#deck-stats" role="tab" onclick="event.preventDefault(); document.body.dataset.tabActivated='yes'">Stats tab</a>
     <table class="table-clickable"><tbody>
       <tr data-href="/target?deck=1"><td><a href="/target?deck=1" onclick="window.linkClicks=(window.linkClicks||0)+1"><strong>Matching link</strong></a></td><td>Row destination</td></tr>
@@ -96,6 +117,7 @@ const server = http.createServer((request, response) => {
       });
     </script>
     <script src="http://ads.adthrive.com:${server.address().port}/ad.js"></script>
+    <script src="http://5.html-load.com:${server.address().port}/proxy-ad.js"></script>
   </body></html>`);
 });
 
@@ -111,7 +133,7 @@ try {
       `--load-extension=${extension}`,
       '--proxy-server=direct://',
       '--proxy-bypass-list=*',
-      '--host-resolver-rules=MAP riftdecks.com 127.0.0.1, MAP *.riftdecks.com 127.0.0.1, MAP mtgdecks.net 127.0.0.1, MAP *.mtgdecks.net 127.0.0.1, MAP inkdecks.com 127.0.0.1, MAP *.inkdecks.com 127.0.0.1, MAP example.test 127.0.0.1, MAP ads.adthrive.com 127.0.0.1',
+      '--host-resolver-rules=MAP riftdecks.com 127.0.0.1, MAP *.riftdecks.com 127.0.0.1, MAP mtgdecks.net 127.0.0.1, MAP *.mtgdecks.net 127.0.0.1, MAP inkdecks.com 127.0.0.1, MAP *.inkdecks.com 127.0.0.1, MAP example.test 127.0.0.1, MAP ads.adthrive.com 127.0.0.1, MAP 5.html-load.com 127.0.0.1',
     ],
   });
   const page = context.pages()[0] || await context.newPage();
@@ -173,6 +195,13 @@ try {
     } else {
       assert.equal(await page.locator('.lateCssomAd').isVisible(), true);
     }
+    await page.getByRole('button', { name: 'Add proxy footer' }).click();
+    if (isSupportedSite) {
+      await page.locator('.proxyFooterAd').waitFor({ state: 'hidden', timeout: 3000 });
+    } else {
+      assert.equal(await page.locator('.proxyFooterAd').isVisible(), true);
+    }
+    assert.equal(await page.evaluate(() => window.proxyAdLoaded === true), !isSupportedSite);
     if (host === 'riftdecks.com' && process.env.BETTER_RIFTDECKS_SCREENSHOT) {
       await page.screenshot({ path: process.env.BETTER_RIFTDECKS_SCREENSHOT });
     }
